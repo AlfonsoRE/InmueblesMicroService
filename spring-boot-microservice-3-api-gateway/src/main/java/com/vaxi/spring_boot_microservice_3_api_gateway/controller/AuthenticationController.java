@@ -37,4 +37,9 @@ public class AuthenticationController {
         return new ResponseEntity<>(authenticationService.signInAndReturnJWT(user),HttpStatus.OK);
     }
 
+    @PostMapping("users")
+    public ResponseEntity<?> users(@RequestBody User user){
+        return new ResponseEntity<>(userService.findByAll(),HttpStatus.OK);
+    }
+
 }
