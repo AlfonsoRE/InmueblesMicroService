@@ -1,5 +1,6 @@
 package com.vaxi.spring_boot_microservice_3_api_gateway.security;
 
+import com.vaxi.spring_boot_microservice_3_api_gateway.model.Role;
 import com.vaxi.spring_boot_microservice_3_api_gateway.security.jwt.JwtAuthorizationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -34,14 +35,26 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
         AuthenticationManagerBuilder auth = http.getSharedObject(AuthenticationManagerBuilder.class);
+
         auth.userDetailsService(customUserDetailsService).passwordEncoder(passwordEncoder);
         AuthenticationManager authenticationManager = auth.build();
-        http.csrf().disable().cors().disable().authorizeHttpRequests()
+
+        http.cors();
+        http.csrf().disable();
+        http.authenticationManager(authenticationManager);
+        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+
+        http.authorizeHttpRequests()
                 .antMatchers("/api/authentication/sign-in","api/authentication/sign-up","/api/user/change/**").permitAll()
-                .and().authorizeHttpRequests().antMatchers(HttpMethod.PUT,"/api/user/change/**").hasAnyRole("USER","ADMIN")
-                .and().authenticationManager(authenticationManager)
-                .addFilterBefore(jwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class)
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+                .antMatchers(HttpMethod.GET,"/gateway/inmueble").permitAll()
+                //.and().authorizeHttpRequests().antMatchers(HttpMethod.PUT,"/api/user/change/**").hasAnyRole("USER","ADMIN")
+                .antMatchers("/gateway/inmueble/**").hasRole(Role.ADMIN.name())
+                .anyRequest().authenticated();
+               // .and().authenticationManager(authenticationManager)
+               // .addFilterBefore(jwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class)
+               // .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.addFilterBefore(jwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
+        
         return http.build();
     }
 
